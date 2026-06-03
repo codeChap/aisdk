@@ -29,6 +29,10 @@ pub fn run(r: &Request) -> Result<i32> {
     // Prompt is passed as an argument, so the child never needs stdin.
     // (Claude otherwise blocks ~3s waiting for piped stdin.)
     cmd.stdin(Stdio::null());
+    // The child's own diagnostics (e.g. Grok's MCP startup logs) go to stderr;
+    // --quiet mutes them, otherwise let them through. aisdk's own messages
+    // (warnings, stream decorations, summary) are written separately and stay.
+    cmd.stderr(if r.quiet { Stdio::null() } else { Stdio::inherit() });
 
     if r.verbose || r.dry_run {
         for line in render::plan(est, r, &bin, &args) {
@@ -41,12 +45,11 @@ pub fn run(r: &Request) -> Result<i32> {
 
     match r.format {
         Format::Text => {
-            cmd.stdout(Stdio::inherit()).stderr(Stdio::inherit());
+            cmd.stdout(Stdio::inherit());
             Ok(cmd.status().with_context(|| spawn_err(&bin))?.code().unwrap_or(1))
         }
         Format::Json => {
-            // Keep stderr separate so the CLI's logs don't corrupt the JSON on stdout.
-            cmd.stdout(Stdio::piped()).stderr(Stdio::inherit());
+            cmd.stdout(Stdio::piped());
             let out = cmd.output().with_context(|| spawn_err(&bin))?;
             let so = String::from_utf8_lossy(&out.stdout);
             match (r.provider.dialect().parse_json)(&so) {
@@ -62,7 +65,7 @@ pub fn run(r: &Request) -> Result<i32> {
             Ok(out.status.code().unwrap_or(1))
         }
         Format::Stream => {
-            cmd.stdout(Stdio::piped()).stderr(Stdio::inherit());
+            cmd.stdout(Stdio::piped());
             let mut child = cmd.spawn().with_context(|| spawn_err(&bin))?;
             let so = child.stdout.take().expect("piped stdout");
             let parse = r.provider.dialect().parse_event;

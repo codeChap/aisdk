@@ -67,6 +67,7 @@ aisdk doctor
 | `--billing <B>` | `subscription` (default) \| `api` | env scrub | env scrub |
 | `--dry-run` | print resolved command, don't run | — | — |
 | `-v, --verbose` | log command + reasoning to stderr | — | — |
+| `-q, --quiet` | mute the underlying CLI's own stderr logging | — | — |
 | `-- <ARGS>` | forward raw args to the underlying CLI | ✓ | ✓ |
 
 Anything not yet mapped is reachable with the `--` escape hatch:

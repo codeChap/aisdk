@@ -89,6 +89,10 @@ pub struct Cli {
     #[arg(short, long)]
     pub verbose: bool,
 
+    /// Mute the underlying CLI's own stderr logging (e.g. Grok's MCP startup noise)
+    #[arg(short = 'q', long)]
+    pub quiet: bool,
+
     /// Everything after `--` is forwarded verbatim to the underlying CLI
     #[arg(last = true, value_name = "-- ARGS")]
     pub passthrough: Vec<String>,
@@ -124,6 +128,7 @@ impl Cli {
             deny: self.deny,
             passthrough: self.passthrough,
             verbose: self.verbose,
+            quiet: self.quiet,
             dry_run: self.dry_run,
         })
     }

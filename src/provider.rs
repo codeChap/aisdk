@@ -56,6 +56,7 @@ pub struct Request {
     pub deny: Vec<String>,
     pub passthrough: Vec<String>,
     pub verbose: bool,
+    pub quiet: bool,
     pub dry_run: bool,
 }
 
